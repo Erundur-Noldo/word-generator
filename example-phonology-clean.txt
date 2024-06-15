@@ -1,0 +1,29 @@
+# DOGY BONA EXAMPLE THING
+
+100>20>5~90
+
+V, $2-0
+CV, $5
+VN, $1-0
+CVN, $2-1-3$
+
+
+C = p,t,k,m,n,s,l,j,w
+V = a,e,i,o,u
+N = n
+
+m,n: 3,4
+p,t,k: 2,4,3
+s,l: 3
+j,w: 2
+
+a,e,i,o,u: 4,3,2,3,2
+
+!ti
+!ji
+!wo, wu
+!nn, nm
+
+# this is what makes it into Dogy Bona
+p,t,k,s > b,d,g,z
+i,j > y
