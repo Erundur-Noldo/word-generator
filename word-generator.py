@@ -4,9 +4,21 @@
 
 import sys
 import random
+import itertools
 
 
 
+
+
+
+
+
+
+
+
+
+
+#functions~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #normalising the chances
 def normalise_probabilities_structure(dictionary):
@@ -53,6 +65,10 @@ def choose_letter(key):
         for option, cumprob in segments[key].items():
             if (random_number <= cumprob):
                 return (option)
+ 
+    if (chosen_option == "Nonewait"):
+        print("Error: a letter was not chosen for the category '" + key + "'")
+        quit()
     return (chosen_option)
 
 
@@ -79,7 +95,58 @@ def generate_syllable(pos):
     output = ""
     for key in chosen_option:
         output += choose_letter(key)
+
+    if (chosen_option == "Nonewait"):
+        print("Error: a letter was not chosen for the category '" + key + "'")
+        quit()
     return(output)
+
+def interpert(key):
+    if (key.islower()):
+        return ([key])
+    else:
+        if(key in categories): return categories[key]
+        else:
+            print("Error: the categorie '" + key + "' is not defined")
+
+
+def interpert_list(list):
+    output = []
+    for item in list: 
+        output.extend(interpert(item))
+    return output
+
+
+def interpert_sequence(sequence):
+    parts = []
+
+    for letter in sequence:
+        if letter.islower(): parts.append(letter)
+        else:                parts.append(interpert(letter))
+
+    combinations = list(itertools.product(*parts))
+    return [''.join(combination) for combination in combinations]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -105,8 +172,8 @@ try:
     with open(file_path, 'r') as file:
         # Read the entire contents of the file
         for line in file:
-            if(line.strip() != ""):
-                lines.append(line.strip())  # strip() to remove leading/trailing whitespace
+            if(line.split('#')[0].strip() != ""):
+                lines.append(line.split('#')[0].strip())  # strip() to remove leading/trailing whitespace
 except FileNotFoundError:
     print(f"Error: The file '{file_path}' was not found.\ncheck the name and the path and if you even made the file at all please thank you ^>^")
     quit()
@@ -116,42 +183,89 @@ except IOError as e: #I dunno what this even means I copypasted it
     
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 #reading the file ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Initialize the dictionary to hold the segments
 segments = {}
+categories = {}
 chances = {}
 structures = {}
-structure_chances = {}
 forbidden_sequences = []
 word_length = []
 rewrite_sequences = []
 
-#reading the chances of every character. it reads, and puts it in the dictionary with the chance attached to it
+
+# reading the categories and making the dictionary that has the dictionaries with letters and chances inside of it
+definitionLines = []
 for line in lines:
-    if line[0] == '#':
-        pass #do nothing
-    
-    
-    elif '>' in line and '~' in line:
+    if '=' in line:
+        definitionLines.append(line)
+
+for line in definitionLines:
+    if(len(definitionLines) > 200):
+        print("error: something went wrong when defining the categories. Check if you:\n·have too many categories\n·define categories in terms of eachother\n·define a category using another chategory that doesn't exist")
+        quit()
+    key, untranslated_characters = line.split('=')
+    key = key.strip()
+    untranslated_characters = [character.strip() for character in untranslated_characters.split(',')]
+    characters = []
+
+    proceed_with_line = True
+    #if there is a category that isn't defined yet, get back to it later
+    for character in untranslated_characters:
+        if (not character.islower() and not character in categories):
+            proceed_with_line = False
+            definitionLines.append(line)
+        else:
+            characters.extend(interpert(character))
+
+    if (proceed_with_line):
+        category = []
+        for character in characters: category.extend(interpert(character))
+        categories[key] = category
+
+
+
+
+
+
+# passing through every line
+for line in lines:
+    # chances of syllables of appearing
+    if '>' in line and '~' in line:
         rest, last = line.split('~')
         if (last != ''): last = float(last.strip())
         else:            last = 0
         word_length = [float(part.strip().strip('~').strip()) for part in rest.split('>')]
         word_length.extend([last])
     
-    
-    elif '>' in line:
-        sequence, rewrite = line.split('>')
-        sequence = [part.strip() for part in sequence.split(',')]
-        rewrite  = [part.strip() for part in rewrite .split(',')]
-        if (len(rewrite) == 1) :
-            rewrite_sequences.extend([[sequence[i], rewrite[0]] for i in range(len(sequence))])
-        else:
-            rewrite_sequences.extend([[sequence[i], rewrite[i]] for i in range(len(sequence))])
-    
-    
+
+    # syllable structures
     elif '$' in line:
         structure, chance = [part.strip() for part in line.split(',')]
         parts = [part.strip() for part in chance.split('-')]
@@ -171,29 +285,69 @@ for line in lines:
         
         structures[structure] = parts
         
-        
-    elif line[0] == '!':
-        forbidden_sequences.extend(part.strip('!').strip() for part in line.split(','))
-        
-        
-    elif ',' in line and not ('=' in line):
+
+    # chance for letter
+    elif ':' in line:
         letter, chance = line.split(':')
         letter = [part.strip() for part in letter.split(',')]
+        letter = interpert_list(letter)
         chance = [part.strip() for part in chance.split(',')]
         if (len(chance) == 1) :
             for i in range(len(letter)): chances[letter[i]] = int(chance[0])
         else:
             for i in range(len(letter)): chances[letter[i]] = int(chance[i])
-        
-#looking at all the categories, and putting every letter in the category in the dictionary, together with the chance that belongs to it
-for line in lines:
-    if '=' in line and not ('%' in line):
-        key, values = [part.strip() for part in line.split('=')]
-        values = {value.strip(): chances[value.strip()] for value in values.split(',')}
-        segments[key] = values
 
-#looking at the syllable structures
-#for line in lines:
+
+    # restricted sequences
+    elif line[0] == '!':
+        sequences = [part.strip('!').strip() for part in line.split(',')]
+        for sequence in sequences: forbidden_sequences.extend(interpert_sequence(sequence))
+
+
+
+    # rewriting rules
+    elif '>' in line:
+        initial_sequence, rewrite = line.split('>')
+
+        initial_sequence = [part.strip() for part in initial_sequence.split(',')]
+        rewrite          = [part.strip() for part in rewrite.split(',')]
+
+        sequence = []
+        for part in initial_sequence: sequence.append(interpert_sequence(part))
+
+
+        if (len(rewrite) == 1): 
+            for i in range(len(sequence)):
+                for letter in sequence[i]: rewrite_sequences.append([letter, rewrite[0]])
+        else:                   
+            for i in range(len(sequence)):
+                for letter in sequence[i]: rewrite_sequences.append([letter, rewrite[i]])
+
+    
+    
+        
+
+
+
+# filling in the 'segments' library
+for line in lines:
+    if ('=' in line):
+        dictionary = {}
+
+        key, characters = line.split('=')
+        key = key.strip()
+        characters = [character.strip() for character in  characters.split(',')]
+        characters = interpert_list(characters)
+        
+        for character in characters:
+            try: dictionary[character] = chances[character]
+            except:
+                print("Error: you're missing the chance for '" + character + "', it seems.")
+                quit()
+        segments[key] = dictionary
+
+
+
 
 
 #normalising the probablities
@@ -201,9 +355,29 @@ structures = normalise_probabilities_structure(structures)
 for key in segments:
     segments[key] = normalise_probabilities_segment(segments[key])
     
-	
 
-#generating the syllable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#generating the syllable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
