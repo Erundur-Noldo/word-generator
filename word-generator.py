@@ -5,7 +5,7 @@
 import sys
 import random
 import itertools
-
+import re
 
 
 
@@ -60,14 +60,14 @@ def normalise_probabilities_segment(dictionary): #best solution to a problem fr
 def choose_letter(key):
     random_number = random.random()
     chosen_option = "Nonewait"
-    
+
     if key in segments:
         for option, cumprob in segments[key].items():
             if (random_number <= cumprob):
                 return (option)
  
     if (chosen_option == "Nonewait"):
-        print("Error: a letter was not chosen for the category '" + key + "'")
+        print("Error: no letter has been chosen for the category '" + key + "'")
         quit()
     return (chosen_option)
 
@@ -93,7 +93,7 @@ def generate_syllable(pos):
             chosen_option = option
             break
     output = ""
-    for key in chosen_option:
+    for key in transform_string(chosen_option):
         output += choose_letter(key)
 
     if (chosen_option == "Nonewait"):
@@ -105,9 +105,11 @@ def interpert(key):
     if (key.islower()):
         return ([key])
     else:
+        return categories[key]
         if(key in categories): return categories[key]
         else:
-            print("Error: the categorie '" + key + "' is not defined")
+            print("Error: the category '" + key + "' is not defined")
+            quit()
 
 
 def interpert_list(list):
@@ -120,10 +122,11 @@ def interpert_list(list):
 def interpert_sequence(sequence):
     parts = []
 
+    sequence = transform_string(sequence)
+
     for letter in sequence:
         if letter.islower(): parts.append(letter)
         else:                parts.append(interpert(letter))
-
     combinations = list(itertools.product(*parts))
     return [''.join(combination) for combination in combinations]
 
@@ -131,6 +134,10 @@ def interpert_sequence(sequence):
 
 
 
+def transform_string(s):
+    # Use regular expression to find substrings in square brackets or individual alphanumeric characters
+    pattern = re.compile(r'\[[^\]]+\]|[a-zA-Z0-9]')
+    return pattern.findall(s)
 
 
 
@@ -313,7 +320,8 @@ for line in lines:
         rewrite          = [part.strip() for part in rewrite.split(',')]
 
         sequence = []
-        for part in initial_sequence: sequence.append(interpert_sequence(part))
+        for part in initial_sequence: 
+            sequence.append(interpert_sequence(part))
 
 
         if (len(rewrite) == 1): 
@@ -366,7 +374,10 @@ for key in segments:
 
 
 
-
+print(segments)
+print(categories)
+print(chances)
+print(structures)
 
 
 
