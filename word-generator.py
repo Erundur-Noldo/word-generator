@@ -186,6 +186,7 @@ except FileNotFoundError:
     quit()
 except IOError as e: #I dunno what this even means I copypasted it
     print(f"(I don't know what this means but:)\nError: There was an IO error while trying to read the file '{file_path}': {e}")
+    quit()
     
     
 
@@ -371,13 +372,6 @@ for key in segments:
 
 
 
-
-
-
-print(segments)
-print(categories)
-print(chances)
-print(structures)
 
 
 
