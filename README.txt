@@ -1,5 +1,10 @@
 readme plz >~<
 
+
+! ! ! OUTDATED ! ! !
+I WILL UPDATE IT LATER
+
+
 I am Emika, and I made this great thing. It's a random word generator running on Python. I use it from command line thing, I dunno, figure it out yourself.
 you can use it, but if you share it, please like, credit me I guess?? also, don't sell it. thank you!!
 also, if you have questions or requests, my thingy on Discord is 'everyoung_goddess_emika'
